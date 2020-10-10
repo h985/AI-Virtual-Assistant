@@ -5,19 +5,13 @@ import datetime
 import urllib
 import re
 from guess_indian_gender import IndianGenderPredictor
-from GoogleFeatures import googlecalenderfeatures, googlenewsfeatures, googleTranslate
-import pandas as pd
 import speedtest 
 from googletrans import Translator
 import wikipedia
 from gtts import gTTS 
-from currency_converter import CurrencyConverter
 import pyttsx3
-import emoji 
 import webbrowser
 import pytz
-from googleplaces import GooglePlaces, types, lang
-import google
 from twilio.rest import TwilioRestClient
 import random
 import os
@@ -28,20 +22,14 @@ from PIL import Image, ImageGrab
 import requests
 from difflib import get_close_matches
 import time
-from InstagramAPI import InstagramAPI
-import pandas as pd
-from pandas.io.json import json_normalize
-import time
 from urllib.request import urlopen 
 import sys
 import pyaudio
-from weather import Weather
 from pyowm import OWM
 import warnings
 import urllib.parse
 import subprocess 
 from getpass import getpass
-from colored import fg, attr
 import wolframalpha
 from clint.textui import progress  
 import ctypes 
@@ -75,14 +63,7 @@ voices = engine.getProperty('voices')
 #print(voices)
 newVoiceRate = 170
 engine.setProperty('rate',newVoiceRate)
-engine.setProperty('voice',voices[1].id)
-
-# Color Properties.
-reset = attr('reset') # Resets the Text Color to Default.
-red = fg('red')       # Prints Text With Red Color.
-blue = fg('blue')     # Prints Text With Blue Color.
-green = fg('green')   # Prints Text With Green Color.
-yellow = fg('yellow') # Prints Text With Yellow Color.
+engine.setProperty('voice',voices[1].id
 
 MONTHS = ["january", "february", "march", "april", "may", "june","july", "august", "september","october", "november", "december"]
 DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -91,61 +72,6 @@ WAKE = "wake up" or 'get up'
 g = geocoder.ip('me')
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
-
-def stop_music():
-    mixer.music.stop()
-    print("Music Stopped")
-    speak('music stopped Sir')
-def pause_music():
-    mixer.music.pause()
-    print("Music Paused")
-    speak('music paused Sir')
-def resume():
-    mixer.music.unpause()
-    print("Music Resumed")
-    speak('Music Resumed Sir')
-def mute_music():
-    mixer.music.set_volume(0)
-    speak('music muted')
-def unmute_music():
-    mixer.music.set_volume(70)
-
-def on_closing():
-    speak('music closed')
-    stop_music() 
-def connectionCheck():
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('www.google.com', 80))
-        s.close()
-    except Exception:
-        print(red + '\n\tUnable to Connect!' + reset)
-        speak('Unable to Connect!')
-        quitApp()
-def quitApp():
-    hour = int(datetime.datetime.now().hour)
-    if hour>=3 and hour<18:
-        print(yellow + f'\n\tBye {name.title()}, Have a Good Day!' + reset)
-        speak(f'Bye {name}, Have a Good Day!')
-    else:
-        print(yellow + f'\n\tBye {name.title()}, Good Night!' + reset)
-        speak(f'Bye {name}, Good Night!')
-    print(red + "\n\t<!!! OFFLINE !!!>" + reset)
-    exit(0)    
-def changePassword():
-        pword = getpass(green + '\n\tEnter New Password : '+ reset)
-        print(yellow + '\n\tPassword Updated Successfully!' + reset)
-        speak('Password Updated Successfully.')
-        print(yellow + "\n\tShould I Show It?" + reset)
-        speak("Should I Show It?")
-        reply = takecommand().lower()
-        if "yes" in reply or 'ok' in reply or 'show' in reply or 'do' in reply:
-            print(yellow + '\n\tShowing Password!' + reset)
-            speak('Okay! Showing!')
-            print(yellow + f'\n\tPassword: {blue}"{pword}"' + reset)
-        else:
-            print(red + "\n\tOkay, Nevermind!" + reset)
-            speak("Okay, Nevermind!")
 
 def speak(audio):  #here audio is var which contain text
     engine.say(audio)
@@ -159,12 +85,22 @@ def check_internet_connection():
     except:
         pass
     return False
-def usrname(): 
-    speak("What should i call you sir") 
-    uname = takecommand() 
-    speak("Welcome Mister") 
-    speak(uname) 
-    speak("How can i Help you, Sir")
+                   
+def changePassword():
+        pword = getpass('\n\tEnter New Password : ')
+        print('\n\tPassword Updated Successfully!')
+        speak('Password Updated Successfully.')
+        print("\n\tShould I Show It?")
+        speak("Should I Show It?")
+        reply = takecommand().lower()
+        if "yes" in reply or 'ok' in reply or 'show' in reply or 'do' in reply:
+            print('\n\tShowing Password!')
+            speak('Okay! Showing!')
+            print( f'\n\tPassword: "{pword}"')
+        else:
+            print( "\n\tOkay, Nevermind!")
+            speak("Okay, Nevermind!")
+
 def authenticate_google():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
@@ -217,6 +153,59 @@ def get_events(day, service):
                 start_time = start_time + "pm"  
 
             speak(event["summary"] + " at " + start_time)
+                   
+def get_date(query):
+    query = takecommand().lower()
+    today = datetime.date.today()
+
+    if query.count("today") > 0:
+        return today
+
+    day = -1
+    day_of_week = -1
+    month = -1
+    year = today.year
+
+    for word in query.split():
+        if word in MONTHS:
+            month = MONTHS.index(word) + 1
+        elif word in DAYS:
+            day_of_week = DAYS.index(word)
+        elif word.isdigit():
+            day = int(word)
+        else:
+            for ext in DAY_EXTENTIONS:
+                found = word.find(ext)
+                if found > 0:
+                    try:
+                        day = int(word[:found])
+                    except:
+                        pass
+    # THE NEW PART STARTS HERE
+    if month < today.month and month != -1:  # if the month mentioned is before the current month set the year to the next
+        year = year+1
+
+    # This is slighlty different from the video but the correct version
+    if month == -1 and day != -1:  # if we didn't find a month, but we have a day
+        if day < today.day:
+            month = today.month + 1
+        else:
+            month = today.month
+
+    # if we only found a dta of the week
+    if month == -1 and day == -1 and day_of_week != -1:
+        current_day_of_week = today.weekday()
+        dif = day_of_week - current_day_of_week
+
+        if dif < 0:
+            dif += 7
+            if query.count("next") >= 1:
+                dif += 7
+
+        return today + datetime.timedelta(dif)
+
+    if day != -1:  # FIXED FROM VIDEO
+        return datetime.date(month=month, day=day, year=year)
 
 def getLangcode(dest):
     LANGUAGES = {
@@ -275,6 +264,13 @@ def getLangcode(dest):
                        "please repeat the langauage you want me to translate in..")
         dest = takecommand().lower()
         return getLangcode(dest)
+                   
+def speaks(input_text,lang='en'):
+    tts=gTTS(text=input_text,lang=lang)
+    filename = ('voice.mp3')
+    tts.save(filename)
+    playsound.playsound(filename,True)
+    os.remove(filename)
 
 def langTranslator(statement,dest):
     print("text to be translated it "+ statement)
@@ -284,66 +280,9 @@ def langTranslator(statement,dest):
     translator = Translator()
     output = translator.translate(statement , dest=destination_lang_code)
     print(output)
-    speak(output.text, destination_lang_code)
+    speaks(output.text, destination_lang_code)
     return output.text
-
-
-
-def get_date(query):
-    query = takecommand().lower()
-    today = datetime.date.today()
-
-    if query.count("today") > 0:
-        return today
-
-    day = -1
-    day_of_week = -1
-    month = -1
-    year = today.year
-
-    for word in query.split():
-        if word in MONTHS:
-            month = MONTHS.index(word) + 1
-        elif word in DAYS:
-            day_of_week = DAYS.index(word)
-        elif word.isdigit():
-            day = int(word)
-        else:
-            for ext in DAY_EXTENTIONS:
-                found = word.find(ext)
-                if found > 0:
-                    try:
-                        day = int(word[:found])
-                    except:
-                        pass
-    # THE NEW PART STARTS HERE
-    if month < today.month and month != -1:  # if the month mentioned is before the current month set the year to the next
-        year = year+1
-
-    # This is slighlty different from the video but the correct version
-    if month == -1 and day != -1:  # if we didn't find a month, but we have a day
-        if day < today.day:
-            month = today.month + 1
-        else:
-            month = today.month
-
-    # if we only found a dta of the week
-    if month == -1 and day == -1 and day_of_week != -1:
-        current_day_of_week = today.weekday()
-        dif = day_of_week - current_day_of_week
-
-        if dif < 0:
-            dif += 7
-            if query.count("next") >= 1:
-                dif += 7
-
-        return today + datetime.timedelta(dif)
-
-    if day != -1:  # FIXED FROM VIDEO
-        return datetime.date(month=month, day=day, year=year)
-
-   
-
+                   
 def wishMe():
     hour = int(datetime.datetime.now().hour)
     if hour>=0 and hour<12:
@@ -366,6 +305,7 @@ def wallpaper():
     wall = os.path.join(wall_dir, d)
     ctypes.windll.user32.SystemParametersInfoW(20, 0, wall, 0)
     speak('Wallpaper change successfully')
+                   
 def you(textToSearch):
     query = urllib.parse.quote(textToSearch)
     url = "https://www.youtube.com/results?search_query=" + query
@@ -400,21 +340,13 @@ def takecommand():
 def takescreenshot():
     image = ImageGrab.grab()
     image.show()
-def getipadress():
-    hostname = socket.gethostname()    
-    IPAddr = socket.gethostbyname(hostname)    
-    print("Your Computer Name is:" + hostname)    
-    print("Your Computer IP Address is:" + IPAddr)
-    speak("Your Computer Name is:" + hostname)
-    speak("Your Computer IP Address is:" + IPAddr)
-
 
 def sendEmail(to, content):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.ehlo()
     server.starttls()
-    server.login('harshsharma82705@gmail.com', 'harsh_papa')
-    server.sendmail('harshsharma82705@gmail.com', to, content)
+    server.login('your email id', 'your email password')
+    server.sendmail('your email id', to, content)
     server.close()
 
         
@@ -450,13 +382,7 @@ def speak_news():
             break
         speak('Moving on the next news headline..')
     speak('These were the top headlines, Have a nice day Sir!!..')
-
-def song():
-    music_dir = 'C:\\Users\\Harsh\\Desktop\\music'
-    songs = os.listdir(music_dir)
-    #print(songs)
-    d = random.choice(songs)    
-    os.startfile(os.path.join(music_dir, d))
+                   
 def note(text):
     date = datetime.datetime.now()
     file_name = str(date).replace(":", "-") + "-note.txt"  
@@ -466,7 +392,7 @@ def note(text):
     subprocess.Popen(["notepad.exe", file_name])
 
     
-def translate(word):
+def dictionary(word):
     word = word.lower()
     with open('C:\\Users\\Harsh\\Desktop\\Jarvis\\data.json') as f:
         data = json.load(f)
@@ -483,24 +409,18 @@ def translate(word):
             speak("Word doesn't exist. Please make sure you spelled it correctly.")
         else:
             speak("We didn't understand your entry.")
-name = 'Sanglap'.lower() # User's Name
-
-
-os.system('cls')
-print(green + "\n\t<!!! ONLINE !!!>" + reset)
-connectionCheck()
-speak(random.choice(WAKE))
-wishMe()
-speak("How Can I Help You?")
-
 
 #for main function                               
 if __name__ == "__main__":
     SERVICE = authenticate_google()
+    wishMe()
     while True:
         query = takecommand().lower()
         if query.count(WAKE) > 0:
             speak("I am online and ready sir")
+                   
+        elif query == 'none':
+            continue 
         elif "wikipedia" in query:
             speak("searching details.... please Wait")
             query.replace("wikipedia","")
@@ -559,121 +479,12 @@ if __name__ == "__main__":
         elif 'help' in query:
             speak("Your jane always ready to be serve you")
             speak('how! may i help you')
-        elif 'ip adress' in query:
-            getipadress()
         
-        elif 'translate' in query:
-            pak = query.replace("translate in","")
-            if 'hindi' in pak:
-                from_lang = 'en'
-                to_lang = 'hi'
-            elif 'punjabi' in pak:
-                from_lang = 'en'
-                to_lang = 'pa'
-            elif 'african' in pak:
-                from_lang = 'en'
-                to_lang = 'af'
-            elif 'arabic' in pak:
-                from_lang = 'en'
-                to_lang = 'ar'
-            elif 'bengali' in pak:
-                from_lang = 'en'
-                to_lang = 'bn'
-            elif 'bulgarian' in pak:
-                from_lang = 'en'
-                to_lang = 'bg'
-            elif 'chinese' in pak:
-                from_lang = 'en'
-                to_lang = 'zh-cn'
-            elif 'danish' in pak:
-                from_lang = 'da'
-                to_lang = 'zh-cn'
-            elif 'dutch' in pak:
-                from_lang = 'en'
-                to_lang = 'nl'
-            elif 'french' in pak:
-                from_lang = 'en'
-                to_lang = 'fr'
-            elif 'german' in pak:
-                from_lang = 'en'
-                to_lang = 'de'
-            elif 'greek' in pak:
-                from_lang = 'en'
-                to_lang = 'el'
-            elif 'gujrati' in pak:
-                from_lang = 'en'
-                to_lang = 'gu'
-            elif 'indonesia' in pak:
-                from_lang = 'en'
-                to_lang = 'id'
-            elif 'italian' in pak:
-                from_lang = 'en'
-                to_lang = 'it'
-            elif 'japaneese' in pak:
-                from_lang = 'en'
-                to_lang = 'ja'
-            elif 'kannada' in pak:
-                from_lang = 'en'
-                to_lang = 'kn'
-            elif 'korean' in pak:
-                from_lang = 'en'
-                to_lang = 'ko'
-            elif 'portuguese' in pak:
-                from_lang = 'en'
-                to_lang = 'pt'
-            elif 'roman' in pak:
-                from_lang = 'en'
-                to_lang = 'ro'
-            elif 'spanish' in pak:
-                from_lang = 'en'
-                to_lang = 'es'
-            elif 'tamil' in pak:
-                from_lang = 'en'
-                to_lang = 'ta'
-            elif 'telugu' in pak:
-                from_lang = 'en'
-                to_lang = 'te'
-            elif 'thailand' in pak:
-                from_lang = 'en'
-                to_lang = 'th'
-            elif 'turkish' in pak:
-                from_lang = 'en'
-                to_lang = 'tr'
-            elif 'vietnam' in pak:
-                from_lang = 'en'
-                to_lang = 'vi'
-            elif 'urdu' in pak:
-                from_lang = 'en'
-                to_lang = 'ur'
-            else:
-                print('No language Selected')
-            
-            speak('What would you like to translate sirr!')
-            get_sentence = takecommand().lower()
-            translator = Translator() 
-            
-            try: 
-                print("Phase to be Translated :"+ get_sentence) 
-                speak("Phase to be Translated") 
-                text_to_translate = translator.translate(get_sentence,  
-                                                     src= from_lang, 
-                                                     dest= to_lang) 
-                text = text_to_translate.text 
-                print(text) 
-                
-
-                ktm = gTTS(text=text, lang=to_lang, slow= False)
-                ktm.save("captured_voice.mp3")      
-                os.system("captured_voice.mp3") 
-
-            except: 
-                print("Unable to Understand the Input")
-
         elif "translate it" in query:
             statement = query.replace('translate it', '')
             speak("In which language?")
             dest = myCommand()
-            speak(googleTranslate.langTranslator(statement, dest))
+            speak(langTranslator(statement, dest))
             return False
 
         elif "save my event" in query:
@@ -685,7 +496,7 @@ if __name__ == "__main__":
 
             speak("and event end date ")
             endDate = takecommand().lower()
-            service = googlecalenderfeatures.set_event(summary, startDate, endDate)
+            service = set_event(summary, startDate, endDate)
 
         elif 'internet speed' in query:
             st = speedtest.Speedtest() 
@@ -696,29 +507,10 @@ if __name__ == "__main__":
         elif 'upload speed' in query:
             st = speedtest.Speedtest() 
             result = st.upload()
+            a = result/1048576
             print(result)
             speak(result)
-        elif 'list' in query:
-            speak('what should you added in that, Sir!')
-            sho = takecommand()
-            file = open('list.txt', 'w')
-            file.write(sho)
-            speak('your items added in your list')
-        elif 'add' in query:
-            qu = query.replace("add","","to my list")
-            file = open('list.txt', 'w')
-            file.write(qu)
-            speak('ok sir' + qu + 'are added in your list')
-        elif 'stop music' in query:
-            stop_music()
-        elif 'pause' in query:
-            pause_music()
-        elif 'mute' in query:
-            mute_music()
-        elif 'set volume to' in query:
-            v = query.replace('set volume to','')
-            mixer.music.set_volume(v)
-
+        
         elif 'wallpaper' in query or 'background' in query:
             speak('ok sir,i will change the wallpaper')
             wallpaper()
@@ -745,7 +537,7 @@ if __name__ == "__main__":
                 pass
         elif 'say ' in query or 'speak' in query:
             copy = query.replace("say ", "")
-            print(yellow + f'\n\t{copy.title()}' + reset)
+            print( f'\n\t{copy.title()}')
             speak(copy)
             time.sleep(1)
         elif "what do i have" in query or "do i have plans" in query or "am i busy" in query or "What's my schedule" in query:
@@ -762,10 +554,6 @@ if __name__ == "__main__":
             speak("Hold on Harsh, I will show you where " + data[2] + " is.")
             maps_arg = '/usr/bin/open -a "/Applications/Google Chrome.app" ' + location_url
             os.system(maps_arg)
-
-        elif 'Set timer for' in query:
-            ti = query.replace("set timer to","")
-            speak('Timer set for' + ti)
 
 
         elif 'Some music' in query or "music" in query or 'change music' in query:
@@ -787,7 +575,7 @@ if __name__ == "__main__":
             speak('I have launched the desired application')
 
         elif 'task manager' in query or 'task-manager' in query:
-            print(yellow + '\n\tOpening Task Manager!' + reset)
+            print('Opening Task Manager!)
             speak('Opening Task Manager')
             os.startfile('C:\\Windows\\system32\\Taskmgr.exe')
             time.sleep(1)
@@ -798,7 +586,7 @@ if __name__ == "__main__":
                 'I am Here'
             ]
             toReply = random.choice(toReply)
-            print(yellow + f"\n\t{toReply}" + reset)
+            print(f"\n\t{toReply}")
             speak(toReply)
         elif 'thanks' in query or 'thank you' in query:
             thanksGiving = [
@@ -808,19 +596,19 @@ if __name__ == "__main__":
                 "That's My Duty!"
             ]
             thanksGiving = random.choice(thanksGiving)
-            print(yellow + f'\n\t{thanksGiving}' + reset)
+            print(f'\n\t{thanksGiving}')
             speak(thanksGiving)
 
         # Opens CMD.
         elif 'cmd' in query or 'command prompt' in query:
-            print(yellow + '\n\tOpening COMMAND PROMPT!' + reset)
+            print('\n\tOpening COMMAND PROMPT!')
             speak('Opening Command Promt')
             os.startfile('C:\\Windows\\System32\\cmd.exe')
             time.sleep(1)
 
         # Starts Calculator.
         elif 'open calculator' in query:
-            print(yellow + '\n\tOpening CALCULATOR' + reset)
+            print('\n\tOpening CALCULATOR')
             speak('Opening Calculator!')
             os.startfile('C:\\Windows\\System32\\calc.exe')
             time.sleep(1)
@@ -829,23 +617,23 @@ if __name__ == "__main__":
         elif "wi-fi details" in query or 'wifi details' in query:
             try:
                 speak("Trying to Show Details")
-                print(green + "\n\tTrying Show Details..." + yellow)
+                print("\n\tTrying Show Details...")
                 subprocess.call('netsh wlan show profiles')
                 time.sleep(3)
             except Exception as e:
-                print(red + "\n\tUnable to Show Details!" + reset)
+                print( "\n\tUnable to Show Details!")
                 speak("Unable to ShoW Details! Sorry")
 
         # Shows IP Details
         elif 'ip details'in query or 'my ip' in query:
-            print(green + '\n\tShowing!' + yellow)
+            print('\n\tShowing!')
             speak("Showing Ip Details")
             subprocess.call("ipconfig")
             time.sleep(2)
 
         # Shows System Information in CMD.
-        elif 'systeminfo' in query or 'system info' in query:
-            print(green + '\n\tShowing System Information!\n' + yellow)
+        elif 'systeminfo' in query or 'system information' in query:
+            print('\n\tShowing System Information!\n')
             speak("Ok, Showng Your System Information. Please Wait")
             subprocess.call('systeminfo')
             speak('Done!')
@@ -853,7 +641,7 @@ if __name__ == "__main__":
 
         # Shows All Running Tasks.
         elif 'task list' in query or 'tasklist' in query:
-            print(green + '\n\tShowing All Running Tasks!' + yellow)
+            print('\n\tShowing All Running Tasks!')
             speak('Showing All Running Tasks!')
             subprocess.call('tasklist')
             time.sleep(10)
@@ -913,14 +701,13 @@ if __name__ == "__main__":
         elif "your feeling" in query:
             print("fst after meeting with you")
             speak("feeling Very sweet after meeting with you") 
-        elif query == 'none':
-            continue 
+        
         elif 'exit' in query or 'abort' in query or 'stop' in query or 'bye' in query or 'quit' in query :
             ex_exit = 'I feeling very sweet after meeting with you but you are going! i am very sad'
             speak(ex_exit)
             exit()    
 
-        elif 'do a google search' in query:
+        elif 'do a google search' in query or 'google search' in query:
             speak('What do you want to search for?')
             search = takecommand()
             url = 'https://google.com/search?q=' + search
@@ -929,15 +716,15 @@ if __name__ == "__main__":
 
         elif "send message " in query: 
                 # You need to create an account on Twilio to use this service 
-                account_sid = 'AC9da3f0851f065ee96d83e3c6197985a4'
-                auth_token = '0564bf809c301a6c2329ad9b15243dce'
+                account_sid = 'YOUR_SID KEY'
+                auth_token = 'YOUR_TOKEN'
                 client = TwilioRestClient(account_sid, auth_token) 
   
                 message = client.messages \
                                 .create(
                                     body = takecommand(), 
-                                    from_='+916395467452', 
-                                    to ='+919012048644',
+                                    from_='+91<>', 
+                                    to ='+91<>',
                                 ) 
                 print(message.sid)
         elif 'screenshot' in query:
@@ -946,12 +733,8 @@ if __name__ == "__main__":
 
 
         elif 'meaning' in query:
-            dice = query.replace('meaning of','')
-            translate(dice)
-
-        elif 'how are you' in query: 
-            speak("I am fine, Thank you") 
-            speak("How are you, Sir")  
+            query = query.replace('meaning of','')
+            dictionary(query)
 
         elif "change my name to" in query: 
             query = query.replace("change my name to", "") 
@@ -1043,15 +826,8 @@ if __name__ == "__main__":
         
         elif 'dictionary' in query:
             speak('What you want to search in your intelligent dictionary?')
-            translate(takecommand())
+            dictionary(takecommand())
 
-            
-        elif 'sexy' in query or 'porn' in query:
-            speak('of which pornstar you would like to watch them')
-            search = takecommand()
-            url = 'https://bigfuck.tv/stars/' + search + '/'
-            subprocess.Popen(["C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "-incognito", url])
-            speak('now we presenting' + search)
         elif 'kiss me' in query:
             speak('Sorry sir! I am machine')
     
@@ -1121,10 +897,8 @@ if __name__ == "__main__":
         elif "today's news" in query:
             speak('Ofcourse sir..')
             speak_news()
-        elif 'forecast' in query:
-            speak('')
 
-        elif "today's weather" in query:
+        elif "today's weather" in query or 'forecast' in query:
             speak('Ofcourse sir..')
             weather()
 
@@ -1137,10 +911,57 @@ if __name__ == "__main__":
 
         elif 'search in youtube' in query:
             speak('What Would You Search in  Youtube Sir')
-            src = takecommand()
-            you(src)
+            srch = takecommand()
+            you(srch)
         
-
+        elif 'play' in query:
+            query = query.replace("play","")
+            speak(f"ok playing {query} on youtube")
+            kit.playonyt(query)
+        elif 'corona cases in' in query:
+            query = query.replace("corona cases in","")
+            country = query
+            try:
+                country_data = covid.get_status_by_country_name(country)
+                speak(f"Corona Virus Info in {country} according to data provided by worldometer")
+                output_text =   (f"Corona Virus Info in {country}:\n")
+                speak(f"Confirmed cases are {country_data['confirmed']}")
+                output_text +=  f"`⚠️  Confirmed   : {country_data['confirmed']}`\n"
+                speak(f"active cases are {country_data['active']}")
+                output_text += f"`☢️  Active      : {country_data['active']}`\n"
+                speak(f"total deaths are {country_data['deaths']}")
+                output_text += f"`⚰️  Deaths      : {country_data['deaths']}`\n"
+                speak(f"total recovered cases are {country_data['recovered']}")
+                output_text += f"`💖 Recovered   : {country_data['recovered']}`\n"
+                output_text += ("Data provided by Worldometer")
+                print(output_text)
+           except ValueError:
+                speak("No information yet about this country")
+                      
+        elif "whatsapp message to" in query:
+             query= query.repalce("whatsapp message to","")
+             contacts = {"<name>" : "+91<mobile no>" , "<name>" : "+91<mobile no>", "<name>" : "+91<mobile no>"}
+             if query in contacts:
+                sendto = contacts.get(query)
+                person_name = query
+                hrs = int(datetime.datetime.now().strftime("%H"))
+                d = datetime.datetime.now() + timedelta(minutes=2)
+                mins = int(d.strftime("Z%M").replace('Z0','Z').replace('Z',''))
+                speak("whats the message.")
+                query = input("enter message by you")
+                message = query
+                speak(f" So, that's the message to {person_name} saying {message}. Are you ready to send it")
+                query = takecommand.lower()
+                if query == 'yes':
+                   kit.sendwhatmsg(sendto,message,hrs,mins)
+                   speak("message sent successfully")
+               elif query == 'no' or query == 'cancel':
+                   speak("okay no problem. Message cancelled")
+               else:
+                   speak("since i am having trouble, i won't send that message. You might want to try again later.")
+            else:
+               speak("No contact found of this name")
+                   
 
         elif 'empty recycle bin' in query: 
             winshell.recycle_bin().empty(confirm = False, show_progress = False, sound = True) 
@@ -1167,11 +988,7 @@ if __name__ == "__main__":
             note(query)
             speak("I've made a note of that.") 
           
-        elif "show note" in query: 
-            speak("ok sir ,i am Showing the Notes") 
-            file = open("note.txt", "r")  
-            print(file.read()) 
-            speak(file.read(6)) 
+
         elif 'ask some questions' in query:
             speak('I think you able to ask question')
             speak('it feels me good')
@@ -1286,15 +1103,7 @@ if __name__ == "__main__":
             speak('I was just only discovering the new things')
         elif 'are you an ai'  in query:
             speak('yes my intelligence totally made artificial')
-        
-        elif 'convert currency' in query:
-            speak('for what amount')
-            s = takecommand()
-            speak('now for which currency')
-            country1 =takecommand()
-            c = CurrencyConverter()
-            c.convert(s, '', 'USD')
-
+  
         elif "what's your favourite song" in  query:
             speak('My favorite is changing in every month! my current favorite is Guitar sikhda')
             speak('would you listen it!')
@@ -1312,20 +1121,7 @@ if __name__ == "__main__":
         elif "what do you think of me" in query:
             print('I would ever think that you are a genious boy')
             speak('I would ever think that you are a genious boy')
-
-        elif "umbrella" in query:
-            api_url = "https://fcc-weather-api.glitch.me/api/current?lat=" + \
-            str(g.latlng[0]) + "&lon=" + str(g.latlng[1])
-
-            data = requests.get(api_url)
-            data_json = data.json()
-            weather_desc = data_json['weather'][0]
-            if data_json['cod'] == 200:
-                main = data_json['main']
-                speak('current weather type ' + weather_desc['main'])
-                fre = ('current weather type ' + weather_desc['main'])
-                
-            speak('I think yes ! it seems to be rainy today')
+              
         elif 'say hi to' in query:
             people_name = query.replace("say hi to","")
             i = IndianGenderPredictor()
@@ -1346,17 +1142,7 @@ if __name__ == "__main__":
                     speak('thats wonderfull Mam')
                 elif 'no' in voi:
                     speak('Dont be worried, your problems is solved easily')
-            
-        elif 'do you know' in query:
-            reg_ex = re.search('Do you know(.*)', query)
-            try:
-                if reg_ex:
-                    topic = reg_ex.group(1)
-                    ny = wikipedia.page(topic)
-                    print(ny.content[:250].encode('utf-8'))
-                    speak(ny.content[:250].encode('utf-8'))
-            except Exception as e:
-                speak(e)
+  
             
         elif 'drawing' in query:
             codePath = "C:\\Program Files\\AutoCAD 2010\\acad.exe"
@@ -1379,21 +1165,8 @@ if __name__ == "__main__":
             os.mkdir(path) 
             speak('Folder Created sir')
 
-        elif 'messages' in query:
-            webbrowser.open('https://www.instagram.com/direct/inbox/?hl=en')
-            speak(f"Look Like you all caught up SIR")
-
-        elif 'quotation box' in query:
-                codePath = "C:\\Users\\esktop\\Desktop\\Quotation"
-                os.startfile(codePath)
-                speak(f"ok, sir as your choice")
-
         elif 'python projects' in query:
             codePath = "C:\\Users\\Harsh\\Desktop\\python projects"
-            os.startfile(codePath)
-            speak(f"ok, sir as your choice")
-        elif 'billing' in query:
-            codepath = "C:\\Program Files\\InfoSky Software Management Pvt Ltd\\Bling Pro\\Bling Pro.exe"
             os.startfile(codePath)
             speak(f"ok, sir as your choice")
 
@@ -1408,49 +1181,12 @@ if __name__ == "__main__":
             try:
                 speak("What should I say?")
                 content = takecommand()
-                to = "harshsharma82705@gmail.com"    
+                to = "your email id"    
                 sendEmail(to, content)
                 speak("Email has been sent!")
             except Exception as e:
                 print(e)
                 speak("Sorry Sir. I am not able to send this email")
-
-
-        elif 'email to sandeep mama' in query:
-            try:
-                speak("What should I say?")
-                content = takecommand()
-                to = "s.vishwakarma.engg1982@gmail.com"    
-                sendEmail(to, content)
-                speak("Email has been sent!")
-            except Exception as e:
-                print(e)
-                speak("Sorry Sir. I am not able to send this email")
-
-        elif 'email to papa' in query:
-            try:
-                speak("What should I say?")
-                content = takecommand()
-                to = "infosvet31@gmail.com"    
-                sendEmail(to, content)
-                speak("Email has been sent!")
-            except Exception as e:
-                print(e)
-                speak("Sorry Sir. I am not able to send this email")
-
-        elif 'email to jyoti' in query:
-            try:
-                speak("What should I say?")
-                content = takecommand()
-                to = "js1735966@gmail.com"    
-                sendEmail(to, content)
-                speak("Email has been sent!")
-            except Exception as e:
-                print(e)
-                speak("Sorry Sir. I am not able to send this email")
-
-        elif 'remind' in query:
-            remi = query.replace('remind','')
 
         else:
             try:
