@@ -1,0 +1,14 @@
+SpeechRecognition==3.8.1
+requests
+pyttsx3
+gTTS
+playsound
+pyaudio
+wikipedia
+selenium
+beautifulsoup4
+wolframalpha
+oauth2client
+googletrans
+sounddevice
+Pillow
