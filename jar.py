@@ -11,6 +11,7 @@ import wikipedia
 from gtts import gTTS 
 import pyttsx3
 import webbrowser
+from covid import Covid
 import pytz
 from twilio.rest import TwilioRestClient
 import random
