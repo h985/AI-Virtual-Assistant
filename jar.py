@@ -4,6 +4,7 @@ import speech_recognition as sr
 import datetime
 import urllib
 import re
+from pyehatkit import kit
 from guess_indian_gender import IndianGenderPredictor
 import speedtest 
 from googletrans import Translator
